@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+.env
+node_modules/
+.idea/
+.vscode/
+dist/
+build/
+*.h5
+*.keras
+*.onnx

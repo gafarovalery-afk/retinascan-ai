@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | RETINASCAN IA</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<div class="animated-bg"></div>
+
+<div class="dashboard-card">
+
+  <h1>Hola {{ username }} 👋</h1>
+  <p>Bienvenido a RETINASCAN IA</p>
+
+  <div class="status-box">
+    <span class="status-dot"></span>
+    Modelo IA Activo
+  </div>
+
+  <form action="/analizar" method="POST" enctype="multipart/form-data">
+
+    <label for="imageInput" class="upload-box" id="uploadBox">
+      <input
+        type="file"
+        name="image"
+        id="imageInput"
+        accept="image/*"
+        required>
+      <div id="uploadText">
+        <span style="font-size:2rem;">📷</span>
+        <h2>Subir Retina</h2>
+        <p>Haz click para seleccionar imagen</p>
+      </div>
+    </label>
+
+    <img
+      id="preview"
+      style="display:none; width:100%; margin-top:20px; border-radius:20px;">
+
+    <button class="analyze-btn" type="submit" id="analyzeBtn">
+      Analizar Retina
+    </button>
+
+  </form>
+
+</div>
+
+<script>
+  const input      = document.getElementById('imageInput');
+  const preview    = document.getElementById('preview');
+  const uploadText = document.getElementById('uploadText');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+
+  input.addEventListener('change', function () {
+    const file = this.files[0];
+    if (file) {
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = 'block';
+      uploadText.style.display = 'none';
+    }
+  });
+
+  document.querySelector('form').addEventListener('submit', function () {
+    analyzeBtn.textContent = 'Analizando...';
+    analyzeBtn.disabled = true;
+  });
+</script>
+
+</body>
+</html>

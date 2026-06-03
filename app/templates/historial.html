@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historial | RETINASCAN IA</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .result-section {
+      background: rgba(255,255,255,0.07);
+      border-radius: 20px;
+      padding: 20px;
+      margin: 16px 0;
+    }
+    .result-section h3 {
+      margin: 0 0 12px 0;
+      font-size: 1rem;
+      opacity: 0.7;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .scan-card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 16px;
+      margin: 12px 0;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .scan-card img {
+      width: 70px;
+      height: 70px;
+      border-radius: 10px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .scan-info { flex: 1; }
+    .scan-info .diagnosis {
+      font-size: 1rem;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .scan-info .meta {
+      font-size: 0.8rem;
+      opacity: 0.6;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      margin-left: 8px;
+    }
+    .badge-none          { background:#1a7a4a; color:#afffcf; }
+    .badge-mild          { background:#4a6a1a; color:#d4ff99; }
+    .badge-moderate      { background:#7a5a1a; color:#ffd999; }
+    .badge-severe        { background:#7a2a1a; color:#ffb099; }
+    .badge-proliferative { background:#5a1a4a; color:#ffaaee; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .stat-box {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .stat-box .val { font-size: 1.6rem; font-weight: bold; }
+    .stat-box .lbl { font-size: 0.75rem; opacity: 0.6; margin-top: 4px; }
+    .empty-state {
+      text-align: center;
+      padding: 40px 0;
+      opacity: 0.5;
+    }
+    .empty-state p { margin-top: 12px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+<div class="animated-bg"></div>
+
+<div class="dashboard-card">
+
+  <h1>Historial 📋</h1>
+  <p style="opacity:0.7">{{ username }}</p>
+
+  {% if scans %}
+
+  <!-- ESTADÍSTICAS GENERALES -->
+  <div class="result-section">
+    <h3>📐 Resumen de tus análisis</h3>
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="val">{{ stats.total }}</div>
+        <div class="lbl">Total de análisis</div>
+      </div>
+      <div class="stat-box">
+        <div class="val">{{ stats.promedio }}%</div>
+        <div class="lbl">Confianza promedio</div>
+      </div>
+      <div class="stat-box">
+        <div class="val">
+          {% if stats.max_severidad == 'proliferative' %}🔴
+          {% elif stats.max_severidad == 'severe' %}🟠
+          {% elif stats.max_severidad == 'moderate' %}🟡
+          {% elif stats.max_severidad == 'mild' %}🟢
+          {% else %}✅{% endif %}
+        </div>
+        <div class="lbl">Severidad más alta</div>
+      </div>
+      <div class="stat-box">
+        <div class="val">{{ scans[0][6] | string | truncate(10, True, '') }}</div>
+        <div class="lbl">Último análisis</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LISTA DE ANÁLISIS -->
+  <div class="result-section">
+    <h3>🗂 Análisis recientes</h3>
+    {% for scan in scans %}
+    <div class="scan-card">
+      <img src="{{ url_for('static', filename='uploads/' + scan[2]) }}"
+           onerror="this.src='https://via.placeholder.com/70x70/1a1a2e/ffffff?text=👁'">
+      <div class="scan-info">
+        <div class="diagnosis">
+          {{ scan[3] }}
+          <span class="badge badge-{{ scan[5] }}">{{ scan[5] | upper }}</span>
+        </div>
+        <div class="meta">
+          Confianza: <strong>{{ scan[4] }}%</strong>
+          {% if scan[6] %} · {{ scan[6] }}{% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+
+  <!-- SIN HISTORIAL -->
+  <div class="result-section">
+    <div class="empty-state">
+      <span style="font-size:3rem;">👁</span>
+      <p>Aún no tienes análisis registrados.</p>
+      <p>Sube tu primera imagen para comenzar.</p>
+    </div>
+  </div>
+
+  {% endif %}
+
+  <!-- BOTONES -->
+  <a href="/dashboard" style="display:block; text-align:center; margin-top:20px; padding:15px;
+     background:linear-gradient(135deg,#00c6ff,#0072ff); color:white; border-radius:15px;
+     text-decoration:none; font-weight:bold;">
+    ← Nuevo análisis
+  </a>
+  <a href="/logout" style="display:block; text-align:center; margin-top:12px; padding:15px;
+     background:rgba(255,255,255,0.1); color:white; border-radius:15px; text-decoration:none;">
+    Cerrar sesión
+  </a>
+
+</div>
+</body>
+</html>

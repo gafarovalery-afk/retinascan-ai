@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>RETINASCAN IA</title>
+
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+<script
+type="module"
+src="{{ url_for(
+'static',
+filename='js/firebase.js'
+) }}">
+</script>
+<body>
+
+<div class="animated-bg"></div>
+
+<div class="floating eye">👁️</div>
+<div class="floating brain">🧠</div>
+<div class="floating chart">📊</div>
+<div class="floating health">⚕️</div>
+<div class="floating dna">🧬</div>
+
+<div class="scan-line"></div>
+
+<div class="login-card">
+
+<div class="logo-eye">
+
+👁️
+
+</div>
+
+<h1>RETINASCAN IA</h1>
+
+<p>
+Diagnóstico inteligente retinal
+</p>
+
+
+<div class="divider">
+
+─────── o ───────
+
+</div>
+<form
+action="/validate_login"
+method="POST">
+
+<input
+type="email"
+name="username"
+placeholder="Correo electrónico"
+required>
+
+<input
+type="password"
+name="password"
+placeholder="Contraseña"
+required>
+
+<button
+class="login-btn"
+type="submit">
+
+Ingresar
+
+</button>
+
+<button
+type="button"
+class="google-btn"
+onclick="googleLogin()">
+
+<img
+src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg"
+width="22">
+
+Continuar con Google
+
+</button>
+</form>
+<a href="/register">
+
+Crear cuenta
+
+</a>
+
+</div>
+
+</body>
+</html>

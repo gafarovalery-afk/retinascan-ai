@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Registro | RETINASCAN IA</title>
+
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+
+<div class="animated-bg"></div>
+
+<div class="floating eye">👁️</div>
+<div class="floating brain">🧠</div>
+<div class="floating dna">🧬</div>
+<div class="floating health">⚕️</div>
+
+<div class="register-card">
+
+<div class="logo-eye">
+
+👁️
+
+</div>
+
+<h1>Crear Cuenta</h1>
+
+<p>
+Únete a RETINASCAN IA
+</p>
+
+<form
+action="/save_user"
+method="POST">
+
+<input
+type="text"
+name="fullname"
+placeholder="Nombre completo"
+required>
+
+<input
+type="number"
+name="age"
+placeholder="Edad"
+required>
+
+<input
+type="email"
+name="username"
+placeholder="Correo electrónico"
+required>
+
+<input
+type="password"
+name="password"
+placeholder="Contraseña"
+required>
+
+<input
+type="password"
+placeholder="Confirmar contraseña"
+required>
+
+<button
+class="register-btn"
+type="submit">
+
+Crear Cuenta
+
+</button>
+
+</form>
+
+<a href="/login">
+
+← Volver al Login
+
+</a>
+
+</div>
+
+</body>
+</html>

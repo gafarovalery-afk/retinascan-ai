@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resultado | RETINASCAN IA</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .result-section { background: rgba(255,255,255,0.07); border-radius: 20px; padding: 20px; margin: 16px 0; }
+    .result-section h3 { margin: 0 0 12px 0; font-size: 1rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
+    .prob-bar { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+    .prob-label { width: 140px; font-size: 0.85rem; opacity: 0.85; flex-shrink: 0; }
+    .prob-track { flex: 1; background: rgba(255,255,255,0.1); border-radius: 10px; height: 10px; overflow: hidden; }
+    .prob-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, #00c6ff, #0072ff); transition: width 1s ease; }
+    .prob-fill.active { background: linear-gradient(90deg, #f7971e, #ffd200); }
+    .prob-val { width: 50px; text-align: right; font-size: 0.85rem; opacity: 0.8; }
+    .rec-item { display: flex; align-items: flex-start; gap: 10px; margin: 10px 0; font-size: 0.9rem; line-height: 1.5; }
+    .rec-icon { font-size: 1.2rem; flex-shrink: 0; }
+    .badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-bottom: 8px; }
+    .badge-none          { background:#1a7a4a; color:#afffcf; }
+    .badge-mild          { background:#4a6a1a; color:#d4ff99; }
+    .badge-moderate      { background:#7a5a1a; color:#ffd999; }
+    .badge-severe        { background:#7a2a1a; color:#ffb099; }
+    .badge-proliferative { background:#5a1a4a; color:#ffaaee; }
+    .entropy-bar { height: 8px; border-radius: 8px; background: rgba(255,255,255,0.1); margin-top: 6px; overflow: hidden; }
+    .entropy-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg, #43e97b, #f9ca24, #f0932b, #eb4d4b); }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+    .stat-box { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 14px; text-align: center; }
+    .stat-box .val { font-size: 1.6rem; font-weight: bold; }
+    .stat-box .lbl { font-size: 0.75rem; opacity: 0.6; margin-top: 4px; }
+    .heatmap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .heatmap-grid img { width: 100%; border-radius: 14px; }
+    .heatmap-grid p { font-size: 0.8rem; opacity: 0.6; text-align: center; margin-bottom: 6px; }
+    .legend { display: flex; justify-content: center; gap: 14px; margin-top: 14px; font-size: 0.8rem; flex-wrap: wrap; }
+    .step-row { display: flex; align-items: flex-start; gap: 14px; margin: 14px 0; }
+    .step-num { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #00c6ff, #0072ff); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; flex-shrink: 0; }
+    .step-text strong { display: block; font-size: 0.9rem; margin-bottom: 4px; }
+    .step-text span { font-size: 0.82rem; opacity: 0.7; line-height: 1.5; }
+  </style>
+</head>
+<body>
+<div class="animated-bg"></div>
+<div class="dashboard-card">
+
+  <h1>Resultado del Diagnóstico 🔍</h1>
+  <p style="opacity:0.7">{{ username }}</p>
+
+  <div class="result-section" style="text-align:center;">
+    {% set badge_map = {'none':'badge-none','mild':'badge-mild','moderate':'badge-moderate','severe':'badge-severe','proliferative':'badge-proliferative'} %}
+    <span class="badge {{ badge_map[result.severity] }}">{{ result.severity | upper }}</span>
+    <h2 style="font-size:2rem; margin:8px 0;">{{ result.prediction }}</h2>
+    <p style="font-size:1.1rem;">Confianza: <strong>{{ result.confidence }}%</strong></p>
+  </div>
+
+  <div class="result-section">
+    <h3>🔥 Zonas de atención del modelo</h3>
+    <p style="font-size:0.85rem; opacity:0.7; margin-bottom:14px;">
+      Las zonas en <strong style="color:#ff6b6b;">rojo/amarillo</strong> indican las áreas centrales de la retina con mayor peso en el análisis.
+      Las zonas <strong style="color:#4e8fff;">azules</strong> corresponden a la periferia con menor relevancia.
+    </p>
+    <div class="heatmap-grid">
+      <div><p>Imagen original</p><img src="{{ url_for('static', filename='uploads/' + image_filename) }}"></div>
+      <div><p>Mapa de activación</p><img src="{{ url_for('static', filename='uploads/' + result.heatmap_filename) }}"></div>
+    </div>
+    <div class="legend">
+      <span>🔵 Periferia</span>
+      <span>🟢 Relevancia baja</span>
+      <span>🟡 Relevancia media</span>
+      <span>🔴 Alta relevancia</span>
+    </div>
+  </div>
+
+  <div class="result-section">
+    <h3>🧠 Cómo analizó la IA tu imagen</h3>
+    <div class="step-row">
+      <div class="step-num">1</div>
+      <div class="step-text">
+        <strong>Preprocesado de imagen</strong>
+        <span>La imagen se redimensionó a <strong>380×380 píxeles</strong> y se normalizaron sus valores RGB con media [0.485, 0.456, 0.406] y desviación [0.229, 0.224, 0.225] — estándar ImageNet.</span>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-num">2</div>
+      <div class="step-text">
+        <strong>Extracción de características (EfficientNet-B4)</strong>
+        <span>El modelo EfficientNet-B4 aplicó capas convolucionales con bloques MBConv para extraer características progresivamente más complejas: bordes, texturas vasculares, microaneurismas y exudados.</span>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-num">3</div>
+      <div class="step-text">
+        <strong>Clasificación con Softmax</strong>
+        <span>La red generó 5 puntuaciones (logits) — una por clase — y las convirtió en probabilidades usando Softmax: P(clase) = e^logit / Σe^logits</span>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-num">4</div>
+      <div class="step-text">
+        <strong>Mapa de activación gaussiano</strong>
+        <span>Se generó un mapa de calor gaussiano centrado en la región central de la retina y se superpuso sobre la imagen original para visualizar el área de mayor interés diagnóstico.</span>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-num">5</div>
+      <div class="step-text">
+        <strong>Diagnóstico final</strong>
+        <span>La clase con mayor probabilidad fue <strong>{{ result.prediction }}</strong> con {{ result.confidence }}% de confianza.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-section">
+    <h3>📊 Distribución de probabilidades</h3>
+    {% set labels = ["Sin retinopatía","Leve","Moderada","Severa","Proliferativa"] %}
+    {% for i in range(5) %}
+    <div class="prob-bar">
+      <span class="prob-label">{{ labels[i] }}</span>
+      <div class="prob-track">
+        <div class="prob-fill {% if result.probs[i] == result.confidence %}active{% endif %}" style="width:{{ result.probs[i] }}%"></div>
+      </div>
+      <span class="prob-val">{{ result.probs[i] }}%</span>
+    </div>
+    {% endfor %}
+    <div style="margin-top:16px;">
+      <p style="font-size:0.8rem; opacity:0.6; margin-bottom:4px;">
+        Entropía (incertidumbre): <strong>{{ result.entropy }}</strong> —
+        {% if result.entropy < 0.5 %}Alta certeza{% elif result.entropy < 1.0 %}Certeza moderada{% else %}Baja certeza{% endif %}
+      </p>
+      <div class="entropy-bar">
+        <div class="entropy-fill" style="width:{{ [result.entropy / 1.6 * 100, 100] | min }}%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-section">
+    <h3>📖 ¿Qué significa este resultado?</h3>
+    {% if result.severity == 'none' %}
+      <p>No se detectaron signos de retinopatía diabética. La retina muestra una apariencia normal. Se recomienda continuar con revisiones periódicas.</p>
+    {% elif result.severity == 'mild' %}
+      <p>Se detectaron microaneurismas leves — pequeñas dilataciones en los vasos sanguíneos de la retina. Es la etapa más temprana de la retinopatía diabética.</p>
+    {% elif result.severity == 'moderate' %}
+      <p>Se observan cambios moderados en los vasos retinales: microaneurismas, hemorragias y exudados. El riesgo de progresión es significativo si no se controla la glucemia.</p>
+    {% elif result.severity == 'severe' %}
+      <p>La retinopatía severa indica obstrucción vascular extensa. Existe riesgo alto de pérdida de visión. Se requiere evaluación oftalmológica urgente.</p>
+    {% elif result.severity == 'proliferative' %}
+      <p>Etapa avanzada con formación de nuevos vasos anormales (neovascularización). Riesgo muy alto de ceguera. Requiere tratamiento inmediato.</p>
+    {% endif %}
+  </div>
+
+  <div class="result-section">
+    <h3>💡 Recomendaciones</h3>
+    {% if result.severity == 'none' %}
+      <div class="rec-item"><span class="rec-icon">✅</span><span>Mantén un control glucémico adecuado (HbA1c &lt; 7%).</span></div>
+      <div class="rec-item"><span class="rec-icon">📅</span><span>Revisión oftalmológica anual de rutina.</span></div>
+      <div class="rec-item"><span class="rec-icon">🥗</span><span>Dieta balanceada y actividad física regular.</span></div>
+    {% elif result.severity == 'mild' %}
+      <div class="rec-item"><span class="rec-icon">🩺</span><span>Consulta con oftalmólogo en los próximos 6 meses.</span></div>
+      <div class="rec-item"><span class="rec-icon">📉</span><span>Control estricto de glucosa, presión arterial y lípidos.</span></div>
+      <div class="rec-item"><span class="rec-icon">🚭</span><span>Evitar tabaco — acelera la progresión vascular.</span></div>
+    {% elif result.severity == 'moderate' %}
+      <div class="rec-item"><span class="rec-icon">⚠️</span><span>Consulta oftalmológica urgente en menos de 3 meses.</span></div>
+      <div class="rec-item"><span class="rec-icon">💊</span><span>Revisión de medicación antidiabética con tu médico.</span></div>
+      <div class="rec-item"><span class="rec-icon">🔬</span><span>Posible indicación de fluoroangiografía retinal.</span></div>
+      <div class="rec-item"><span class="rec-icon">📊</span><span>Monitoreo de glucemia 3-4 veces al día.</span></div>
+    {% elif result.severity == 'severe' %}
+      <div class="rec-item"><span class="rec-icon">🚨</span><span>Evaluación oftalmológica inmediata — no demorar.</span></div>
+      <div class="rec-item"><span class="rec-icon">💉</span><span>Posible tratamiento con láser o inyecciones intravítreas.</span></div>
+      <div class="rec-item"><span class="rec-icon">🏥</span><span>Hospitalización puede ser necesaria para estabilización.</span></div>
+    {% elif result.severity == 'proliferative' %}
+      <div class="rec-item"><span class="rec-icon">🆘</span><span>Atención oftalmológica de emergencia.</span></div>
+      <div class="rec-item"><span class="rec-icon">🔴</span><span>Fotocoagulación panretinal o vitrectomía pueden ser necesarias.</span></div>
+      <div class="rec-item"><span class="rec-icon">👨‍⚕️</span><span>Seguimiento multidisciplinario: endocrinólogo + oftalmólogo.</span></div>
+    {% endif %}
+    <div style="margin-top:16px; padding:12px; background:rgba(255,100,100,0.1); border-radius:12px; font-size:0.8rem; opacity:0.7;">
+      ⚠️ Este diagnóstico es orientativo y no reemplaza la evaluación de un profesional médico.
+    </div>
+  </div>
+
+  <div class="result-section">
+    <h3>📐 Análisis matemático</h3>
+    <div class="stat-grid">
+      <div class="stat-box"><div class="val">{{ result.confidence }}%</div><div class="lbl">Confianza máxima</div></div>
+      <div class="stat-box"><div class="val">{{ result.entropy }}</div><div class="lbl">Entropía de Shannon</div></div>
+      <div class="stat-box"><div class="val">{{ "%.2f"|format(result.probs | max - result.probs | min) }}%</div><div class="lbl">Rango de probabilidad</div></div>
+      <div class="stat-box"><div class="val">{{ "%.2f"|format(result.probs | sum / 5) }}%</div><div class="lbl">Probabilidad media</div></div>
+    </div>
+  </div>
+
+  <a href="/dashboard" style="display:block; text-align:center; margin-top:20px; padding:15px; background:linear-gradient(135deg,#00c6ff,#0072ff); color:white; border-radius:15px; text-decoration:none; font-weight:bold;">← Nuevo análisis</a>
+  <a href="/historial" style="display:block; text-align:center; margin-top:12px; padding:15px; background:rgba(255,255,255,0.1); color:white; border-radius:15px; text-decoration:none;">Ver historial</a>
+
+</div>
+</body>
+</html>
